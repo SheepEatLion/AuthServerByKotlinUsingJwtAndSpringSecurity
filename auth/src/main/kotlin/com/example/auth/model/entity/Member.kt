@@ -1,4 +1,4 @@
-package com.example.auth.domain
+package com.example.auth.model.entity
 
 import jakarta.persistence.*
 
