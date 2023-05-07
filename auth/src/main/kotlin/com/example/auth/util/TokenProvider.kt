@@ -10,9 +10,11 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
+import org.springframework.stereotype.Component
 import java.util.*
 import java.util.stream.Collectors
 
+@Component
 class TokenProvider(
     @param:Value("\${jwt.secret}") private val SECRET: String,
     @Value("\${jwt.access-token-validity}") ACCESS_TOKEN_VALIDITY: Long,
