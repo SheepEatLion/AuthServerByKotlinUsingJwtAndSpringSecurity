@@ -2,10 +2,14 @@ package com.example.auth.util
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.auth.model.entity.Member
+import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.interfaces.DecodedJWT
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.User
 import java.util.*
 import java.util.stream.Collectors
 
@@ -35,5 +39,41 @@ class TokenProvider(
             .withExpiresAt(Date(Date().time + refreshTokenValidityMilliseconds))
             .withClaim("accessToken", accessToken)
             .sign(Algorithm.HMAC512(SECRET))
+    }
+
+    fun getAuthentication(token: String): Authentication {
+        val decodedJwt = toDecodedJwt(token = token)
+
+        val authorities: Collection<GrantedAuthority> = Arrays
+            .stream(decodedJwt.claims["auth"].toString().split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray())
+            .map { role: String? -> SimpleGrantedAuthority(role) }
+            .collect(Collectors.toList())
+
+        val principal = User(decodedJwt.subject, "", authorities)
+
+        return UsernamePasswordAuthenticationToken(principal, token, authorities)
+    }
+
+    fun validate(token: String): Boolean {
+        val decodedJwt = toDecodedJwt(token = token)
+        verifyExpiresAt(decodedJwt = decodedJwt)
+        verifySubject(decodedJwt = decodedJwt)
+        return true
+    }
+
+    private fun toDecodedJwt(token: String): DecodedJWT {
+        return JWT.require(Algorithm.HMAC512(SECRET)).build().verify(token)
+    }
+
+    private fun verifyExpiresAt(decodedJwt: DecodedJWT) {
+        if(decodedJwt.expiresAt == null || Date().after(decodedJwt.expiresAt)) {
+            throw JWTVerificationException("expired token")
+        }
+    }
+
+    private fun verifySubject(decodedJwt: DecodedJWT) {
+        if(decodedJwt.subject == null) {
+            throw JWTVerificationException("empty subject")
+        }
     }
 }
