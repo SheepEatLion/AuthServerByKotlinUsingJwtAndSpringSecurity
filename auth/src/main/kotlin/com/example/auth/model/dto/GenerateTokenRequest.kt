@@ -4,8 +4,8 @@ import org.jetbrains.annotations.NotNull
 
 data class GenerateTokenRequest(
     @field:NotNull
-    val memberId: Long,
+    val id: Long,
 
     @field:NotNull
-    val memberEmail: String,
+    val email: String,
 )

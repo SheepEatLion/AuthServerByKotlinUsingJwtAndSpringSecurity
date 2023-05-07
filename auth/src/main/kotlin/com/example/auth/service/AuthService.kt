@@ -18,7 +18,7 @@ class AuthService(
     val authenticationManagerBuilder: AuthenticationManagerBuilder,
 ) {
     fun generate(generateTokenRequest: GenerateTokenRequest): ResponseEntity<AccessTokenResponse> {
-        val authenticationToken = UsernamePasswordAuthenticationToken(generateTokenRequest.memberId, generateTokenRequest.memberEmail)
+        val authenticationToken = UsernamePasswordAuthenticationToken(generateTokenRequest.id, generateTokenRequest.email)
         val authentication: Authentication = authenticationManagerBuilder.`object`.authenticate(authenticationToken)
 
         SecurityContextHolder.getContext().authentication = authentication
