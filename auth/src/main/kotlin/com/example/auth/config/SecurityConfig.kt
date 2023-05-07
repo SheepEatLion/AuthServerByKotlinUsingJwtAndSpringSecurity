@@ -54,7 +54,7 @@ class SecurityConfig(
 
             .and()
             .authorizeHttpRequests()
-            .requestMatchers("/api/hello", "/api/authenticate", "/api/signup").permitAll()
+            .requestMatchers("/v1/auth/token/generate").permitAll()
             .requestMatchers(PathRequest.toH2Console()).permitAll()
             .anyRequest().authenticated()
 
