@@ -18,13 +18,9 @@ class AuthService(
     val authenticationManagerBuilder: AuthenticationManagerBuilder,
 ) {
     fun generate(generateTokenRequest: GenerateTokenRequest): ResponseEntity<AccessTokenResponse> {
-        val authenticationToken = UsernamePasswordAuthenticationToken(generateTokenRequest.id, generateTokenRequest.email)
-        val authentication: Authentication = authenticationManagerBuilder.`object`.authenticate(authenticationToken)
-
-        SecurityContextHolder.getContext().authentication = authentication
-
-        val accessToken: String = tokenProvider.generateAccessToken(authentication = authentication)
-        val refreshToken: String = tokenProvider.generateRefreshToken(authentication = authentication, accessToken = accessToken)
+        setSecurityHolder(id = generateTokenRequest.id, email = generateTokenRequest.email)
+        val accessToken: String = tokenProvider.generateAccessToken(authentication = SecurityContextHolder.getContext().authentication)
+        val refreshToken: String = tokenProvider.generateRefreshToken(authentication = SecurityContextHolder.getContext().authentication, email = generateTokenRequest.email)
 
         val httpHeaders = HttpHeaders()
         httpHeaders.add("refresh-token", refreshToken)
@@ -33,10 +29,22 @@ class AuthService(
     }
 
     fun invalidate() {
-
+        //TODO 토큰 무효화 (강제 로그아웃)
     }
 
-    fun refresh() {
+    fun refresh(refreshToken: String): ResponseEntity<AccessTokenResponse> {
+        tokenProvider.validate(token = refreshToken)
+        setSecurityHolder(tokenProvider.getId(refreshToken = refreshToken), tokenProvider.getEmail(refreshToken = refreshToken))
 
+        val accessToken: String = tokenProvider.generateAccessToken(authentication = SecurityContextHolder.getContext().authentication)
+
+        return ResponseEntity<AccessTokenResponse>(AccessTokenResponse(accessToken), HttpStatus.OK)
+    }
+
+    fun setSecurityHolder(id: Long, email: String) {
+        val authenticationToken = UsernamePasswordAuthenticationToken(id, email)
+        val authentication: Authentication = authenticationManagerBuilder.`object`.authenticate(authenticationToken)
+
+        SecurityContextHolder.getContext().authentication = authentication
     }
 }

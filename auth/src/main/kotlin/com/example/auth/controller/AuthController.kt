@@ -5,10 +5,7 @@ import com.example.auth.model.dto.GenerateTokenRequest
 import com.example.auth.service.AuthService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RequestMapping("v1/auth")
 @RestController
@@ -26,7 +23,7 @@ class AuthController(
     }
 
     @PostMapping("/token/refresh")
-    fun refresh() {
-
+    fun refresh(@CookieValue("refresh-token") refreshToken: String): ResponseEntity<AccessTokenResponse> {
+        return authService.refresh(refreshToken = refreshToken)
     }
 }

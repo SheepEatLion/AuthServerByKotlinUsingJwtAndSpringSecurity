@@ -35,11 +35,11 @@ class TokenProvider(
             .sign(Algorithm.HMAC512(SECRET))
     }
 
-    fun generateRefreshToken(authentication: Authentication, accessToken: String): String {
+    fun generateRefreshToken(authentication: Authentication, email: String): String {
         return JWT.create()
             .withSubject(authentication.name)
             .withExpiresAt(Date(Date().time + refreshTokenValidityMilliseconds))
-            .withClaim("accessToken", accessToken)
+            .withClaim("email", email)
             .sign(Algorithm.HMAC512(SECRET))
     }
 
@@ -77,5 +77,15 @@ class TokenProvider(
         if(decodedJwt.subject == null) {
             throw JWTVerificationException("empty subject")
         }
+    }
+
+    fun getId(refreshToken: String): Long {
+        val decodedRefreshToken = toDecodedJwt(token = refreshToken)
+        return decodedRefreshToken.subject.toLong()
+    }
+
+    fun getEmail(refreshToken: String): String {
+        val decodedRefreshToken = toDecodedJwt(token = refreshToken)
+        return decodedRefreshToken.claims["email"].toString()
     }
 }
