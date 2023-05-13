@@ -54,7 +54,7 @@ class SecurityConfig(
 
             .and()
             .authorizeHttpRequests()
-            .requestMatchers("/v1/auth/token/**").permitAll()
+            .requestMatchers("/v1/auth/token/**", "v1/auth/kakao").permitAll()
             .requestMatchers(PathRequest.toH2Console()).permitAll()
             .anyRequest().authenticated()
 
