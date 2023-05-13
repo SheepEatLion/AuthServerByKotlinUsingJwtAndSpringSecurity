@@ -1,8 +1,10 @@
 package com.example.auth.service
 
-import com.example.auth.model.dto.AccessTokenResponse
-import com.example.auth.model.dto.GenerateTokenRequest
+import com.example.auth.model.dto.*
+import com.example.auth.util.KakaoTokenFeignClient
+import com.example.auth.util.KakaoUserFeignClient
 import com.example.auth.util.TokenProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -16,6 +18,14 @@ import org.springframework.stereotype.Service
 class AuthService(
     val tokenProvider: TokenProvider,
     val authenticationManagerBuilder: AuthenticationManagerBuilder,
+    val kakaoTokenFeignClient: KakaoTokenFeignClient,
+    val kakaoUserFeignClient: KakaoUserFeignClient,
+
+    @Value("\${oauth2.kakao.clientId}")
+    val clientId: String,
+
+    @Value("\${oauth2.kakao.secretKey")
+    val clientSecret: String,
 ) {
     fun generate(generateTokenRequest: GenerateTokenRequest): ResponseEntity<AccessTokenResponse> {
         setSecurityHolder(id = generateTokenRequest.id, email = generateTokenRequest.email)
@@ -46,5 +56,20 @@ class AuthService(
         val authentication: Authentication = authenticationManagerBuilder.`object`.authenticate(authenticationToken)
 
         SecurityContextHolder.getContext().authentication = authentication
+    }
+
+    fun getKakaoUser(getKakaoUserEmailRequest: GetKakaoUserEmailRequest): GetKakaoUserEmailResponse {
+        val kakaoTokenResponse: GetKakaoTokenResponse = kakaoTokenFeignClient.getToken(
+            GetKakaoTokenRequest(
+                code = getKakaoUserEmailRequest.code,
+                redirectUri = getKakaoUserEmailRequest.redirectUri,
+                clientSecret = clientSecret,
+                clientId = clientId,
+            ).toString()
+        )
+        val token: String = "Bearer ${kakaoTokenResponse.accessToken}"
+        val kakaoUserResponse: GetKakaoUserResponse = kakaoUserFeignClient.getUser(token)
+
+        return GetKakaoUserEmailResponse(kakaoUserResponse.kakaoAccount.email)
     }
 }
